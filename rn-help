@@ -1,0 +1,43 @@
+#!/bin/bash
+
+# Function to display the menu options
+show_menu() {
+    echo "Please select a command to run:"
+    echo "1) ios-pod [installs pods]"
+    echo "2) clean-ios [Cleans the iOS build directories]"
+    echo "3) clean-android [Cleans the Android build directories]"
+    echo "4) Exit"
+}
+
+current_dir=$(pwd)
+store_permission="xattr -w com.apple.xcode.CreatedByBuildSystem true $current_dir/ios/build"
+
+
+# Function to run the selected command
+run_command() {
+    case $1 in
+        1)
+            npx pod-install
+            ;;
+        2)
+            eval "$store_permission" && cd iOS && xcodebuild clean && rm -rf ~/Library/Caches/CocoaPods && rm -rf Pods && rm -rf ~/Library/Developer/Xcode/DerivedData/* && pod cache clean --all && pod deintegrate && pod setup && cd .. && npx pod-install
+            ;;
+        3)
+            cd android && ./gradlew clean && ./gradlew cleanBuildCache && cd ..
+            ;;
+        4)
+            echo "Exiting..."
+            exit 0
+            ;;
+        *)
+            echo "Invalid option, please try again."
+            ;;
+    esac
+}
+
+# Main loop
+while true; do
+    show_menu
+    read -p "Enter your choice: " choice
+    run_command $choice
+done

@@ -1,0 +1,66 @@
+#!/bin/bash
+
+# Set the local Git directory
+GIT_DIR="[PATH_TO_YOUR_GIT_DIRECTORY]"
+
+# Prompt the user for the source branch, defaulting to 'main' if not provided
+read -p "Enter the source branch (default is 'main'): " source_branch
+source_branch=${source_branch:-main}
+
+# Prompt the user for the new branch name
+while [ -z "$new_branch" ]; do
+    read -p "Enter the name for the new branch: " new_branch
+    if [ -z "$new_branch" ]; then
+        echo "Error: New branch name is required."
+    fi
+done
+
+# Prompt the user for the commit message
+while [ -z "$commit_message" ]; do
+    read -p "Enter the commit message: " commit_message
+    if [ -z "$commit_message" ]; then
+        echo "Error: Commit message is required."
+    fi
+done
+
+# Navigate to the specified Git directory
+cd "$GIT_DIR" || { echo "Directory $GIT_DIR not found."; exit 1; }
+
+# Switch to the specified source branch
+echo "Switching to the source branch $source_branch..."
+git checkout $source_branch
+
+# Stash current changes to pull new changes
+echo "Stashing current changes..."
+git stash
+
+# Pull the latest changes from the source branch
+echo "Pulling the latest changes from $source_branch..."
+git pull origin $source_branch
+
+# Create a new branch from the source branch
+echo "Creating a new branch $new_branch from $source_branch..."
+git checkout -b $new_branch
+
+# Apply the stashed changes
+echo "Applying stashed changes..."
+git stash apply
+
+# Wait for the user to stage changes
+echo "Please stage your changes manually and then press Enter to continue..."
+read
+
+# Delay for 5 seconds before committing
+echo "Waiting for 5 seconds before committing..."
+sleep 5
+
+# Commit the changes with the provided message
+echo "Committing changes..."
+git commit -m "$commit_message"
+
+# Push the changes to the origin
+echo "Pushing changes to origin/$new_branch..."
+git push origin $new_branch
+
+echo "Done!"
+
